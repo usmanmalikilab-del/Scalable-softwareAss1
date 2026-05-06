@@ -36,7 +36,7 @@
  *           description: CDN URL of the uploaded image
  *         publicId:
  *           type: string
- *           description: Cloudinary public ID for image management
+ *           description: Azure Blob Storage name for image management
  *         creatorId:
  *           type: string
  *           description: ID of the user who uploaded the image

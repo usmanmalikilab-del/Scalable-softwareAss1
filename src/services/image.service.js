@@ -1,6 +1,5 @@
 const sharp = require('sharp');
-const cloudinary = require('../config/cloudinary');
-const env = require('../config/env');
+const { uploadImage: uploadToAzure, deleteImage: deleteFromAzure } = require('../config/azure-storage');
 
 async function optimizeImage(buffer) {
   return sharp(buffer)
@@ -13,27 +12,39 @@ async function optimizeImage(buffer) {
 async function uploadImage(buffer, filename) {
   const optimizedBuffer = await optimizeImage(buffer);
 
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: env.cloudinary.folder,
-        resource_type: 'image',
-        public_id: filename ? filename.replace(/\.[^/.]+$/, '') : undefined
-      },
-      (error, result) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+  // Generate a unique filename if not provided
+  const uniqueFilename = filename || `image-${Date.now()}.jpg`;
 
-        resolve(result);
-      }
-    );
+  try {
+    const result = await uploadToAzure(optimizedBuffer, uniqueFilename);
 
-    stream.end(optimizedBuffer);
-  });
+    // Return the same structure as Cloudinary for compatibility
+    return {
+      url: result.url,
+      public_id: result.blobName, // Keep same field name for compatibility
+      etag: result.etag,
+      lastModified: result.lastModified,
+      contentLength: result.contentLength,
+      resource_type: 'image',
+      format: 'jpeg'
+    };
+  } catch (error) {
+    console.error('Azure Blob upload error:', error);
+    throw error;
+  }
+}
+
+async function deleteImage(blobName) {
+  try {
+    await deleteFromAzure(blobName);
+    return { success: true, deleted: blobName };
+  } catch (error) {
+    console.error('Azure Blob delete error:', error);
+    throw error;
+  }
 }
 
 module.exports = {
-  uploadImage
+  uploadImage,
+  deleteImage
 };

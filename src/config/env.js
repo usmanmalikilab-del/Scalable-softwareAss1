@@ -1,9 +1,8 @@
 const requiredVariables = [
   'MONGODB_URI',
   'JWT_SECRET',
-  'CLOUDINARY_CLOUD_NAME',
-  'CLOUDINARY_API_KEY',
-  'CLOUDINARY_API_SECRET'
+  'AZURE_STORAGE_CONNECTION_STRING',
+  'AZURE_STORAGE_CONTAINER_NAME'
 ];
 
 const missingVariables = requiredVariables.filter((name) => !process.env[name]);
@@ -12,20 +11,35 @@ if (missingVariables.length) {
   throw new Error(`Missing environment variables: ${missingVariables.join(', ')}`);
 }
 
+// Parse Azure Storage connection string to get account name and key
+function parseAzureStorageConnectionString(connectionString) {
+  const parts = connectionString.split(';');
+  const accountName = parts.find(p => p.startsWith('AccountName='))?.split('=')[1];
+  const accountKey = parts.find(p => p.startsWith('AccountKey='))?.split('=')[1];
+
+  if (!accountName || !accountKey) {
+    throw new Error('Invalid Azure Storage connection string');
+  }
+
+  return { accountName, accountKey };
+}
+
+const azureStorage = parseAzureStorageConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
+
 module.exports = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT) || 5001,
   mongodbUri: process.env.MONGODB_URI,
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '3d',
-  cloudinary: {
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-    apiKey: process.env.CLOUDINARY_API_KEY,
-    apiSecret: process.env.CLOUDINARY_API_SECRET,
-    folder: process.env.CLOUDINARY_FOLDER
+  azureStorage: {
+    connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING,
+    accountName: azureStorage.accountName,
+    accountKey: azureStorage.accountKey,
+    containerName: process.env.AZURE_STORAGE_CONTAINER_NAME
   },
   redisUrl: process.env.REDIS_URL || '',
   redisHost: process.env.REDIS_HOST,
-  redisPort: Number(process.env.REDIS_PORT) || 6379,
+  redisPort: Number(process.env.REDIS_PORT) || 6380,
   redisPassword: process.env.REDIS_PASSWORD
 };
