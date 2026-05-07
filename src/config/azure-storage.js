@@ -1,12 +1,9 @@
 const crypto = require('crypto');
-const { BlobServiceClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
+const { BlobServiceClient } = require('@azure/storage-blob');
 const env = require('./env');
 
-// Create BlobServiceClient
-const blobServiceClient = new BlobServiceClient(
-  `https://${env.azureStorage.accountName}.blob.core.windows.net`,
-  new StorageSharedKeyCredential(env.azureStorage.accountName, env.azureStorage.accountKey)
-);
+// Create BlobServiceClient using connection string directly
+const blobServiceClient = BlobServiceClient.fromConnectionString(env.azureStorage.connectionString);
 
 // Get container client
 const containerClient = blobServiceClient.getContainerClient(env.azureStorage.containerName);
