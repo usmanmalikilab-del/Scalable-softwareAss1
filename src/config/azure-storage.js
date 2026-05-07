@@ -9,9 +9,7 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(env.azureStorag
 const containerClient = blobServiceClient.getContainerClient(env.azureStorage.containerName);
 
 async function initContainer() {
-  await containerClient.createIfNotExists({
-    access: 'blob'
-  });
+await containerClient.createIfNotExists();
 }
 
 const init = async () => {
