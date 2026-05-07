@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { BlobServiceClient, StorageSharedKeyCredential } = require('@azure/storage-blob');
 const env = require('./env');
 

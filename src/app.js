@@ -16,6 +16,9 @@ const swaggerSpecs = require('./config/swagger');
 
 const app = express();
 
+// Trust proxy for Azure App Services
+app.set('trust proxy', true);
+
 app.use(helmet());
 app.use(cors({ origin: '*', credentials: true }));
 app.use(compression());
