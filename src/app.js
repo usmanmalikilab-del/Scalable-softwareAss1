@@ -16,8 +16,8 @@ const swaggerSpecs = require('./config/swagger');
 
 const app = express();
 
-// Trust proxy for Azure App Services
-app.set('trust proxy', true);
+// Trust proxy for Azure App Services - disabled for rate limiting
+app.set('trust proxy', false);
 
 app.use(helmet());
 app.use(cors({ origin: '*', credentials: true }));
@@ -36,11 +36,10 @@ app.use(
     max: 300,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => {
-      return req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 
-             (req.connection.socket ? req.connection.socket.remoteAddress : null) || 'unknown';
-    },
-    trustProxy: false
+    skip: (req) => {
+      // Skip rate limiting in test environment
+      return process.env.NODE_ENV === 'test';
+    }
   })
 );
 

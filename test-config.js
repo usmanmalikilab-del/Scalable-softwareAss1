@@ -1,4 +1,5 @@
 // Test configuration without requiring actual environment variables
+process.env.NODE_ENV = 'test';
 process.env.MONGODB_URI = 'mongodb://localhost:27017/photo-sharing';
 process.env.JWT_SECRET = 'test-secret';
 process.env.AZURE_STORAGE_CONNECTION_STRING = 'DefaultEndpointsProtocol=https;AccountName=test;AccountKey=test;EndpointSuffix=core.windows.net';

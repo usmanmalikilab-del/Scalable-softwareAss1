@@ -9,11 +9,24 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(env.azureStorag
 const containerClient = blobServiceClient.getContainerClient(env.azureStorage.containerName);
 
 async function initContainer() {
-  await containerClient.createIfNotExists({ access: 'container' });
+  try {
+    await containerClient.createIfNotExists({ access: 'private' });
+    console.log('✅ Azure container initialized successfully');
+  } catch (error) {
+    if (error.code === 'PublicAccessNotPermitted') {
+      console.log('⚠️ Container already exists with private access');
+    } else {
+      console.error('❌ Failed to initialize Azure container:', error.message);
+      throw error;
+    }
+  }
 }
 
 const init = async () => {
-  await initContainer();
+  // Only initialize in non-test environments
+  if (process.env.NODE_ENV !== 'test') {
+    await initContainer();
+  }
 };
 
 init().catch(console.error);

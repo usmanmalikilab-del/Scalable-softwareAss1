@@ -1,3 +1,6 @@
+// Skip validation in test environment for CI compatibility
+const isTestEnvironment = process.env.NODE_ENV === 'test';
+
 const requiredVariables = [
   'MONGODB_URI',
   'JWT_SECRET',
@@ -7,12 +10,16 @@ const requiredVariables = [
 
 const missingVariables = requiredVariables.filter((name) => !process.env[name]);
 
-if (missingVariables.length) {
+if (!isTestEnvironment && missingVariables.length) {
   throw new Error(`Missing environment variables: ${missingVariables.join(', ')}`);
 }
 
 // Parse Azure Storage connection string to get account name and key
 function parseAzureStorageConnectionString(connectionString) {
+  if (!connectionString) {
+    return { accountName: 'test', accountKey: 'test' };
+  }
+  
   const parts = connectionString.split(';');
   const accountName = parts.find(p => p.startsWith('AccountName='))?.split('=')[1];
   const accountKey = parts.find(p => p.startsWith('AccountKey='))?.split('=')[1];
@@ -29,14 +36,14 @@ const azureStorage = parseAzureStorageConnectionString(process.env.AZURE_STORAGE
 module.exports = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT) || 5001,
-  mongodbUri: process.env.MONGODB_URI,
-  jwtSecret: process.env.JWT_SECRET,
+  mongodbUri: process.env.MONGODB_URI || (isTestEnvironment ? 'mongodb://localhost:27017/test' : undefined),
+  jwtSecret: process.env.JWT_SECRET || (isTestEnvironment ? 'test-secret' : undefined),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '3d',
   azureStorage: {
-    connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING,
+    connectionString: process.env.AZURE_STORAGE_CONNECTION_STRING || (isTestEnvironment ? 'test-connection-string' : undefined),
     accountName: azureStorage.accountName,
     accountKey: azureStorage.accountKey,
-    containerName: process.env.AZURE_STORAGE_CONTAINER_NAME
+    containerName: process.env.AZURE_STORAGE_CONTAINER_NAME || (isTestEnvironment ? 'test-images' : undefined)
   },
   redisUrl: process.env.REDIS_URL || '',
   redisHost: process.env.REDIS_HOST,
