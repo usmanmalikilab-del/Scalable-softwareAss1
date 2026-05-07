@@ -36,7 +36,7 @@ app.use(
     max: 300,
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req) => {
+    skip: () => {
       // Skip rate limiting in test environment
       return process.env.NODE_ENV === 'test';
     }

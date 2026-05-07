@@ -19,7 +19,7 @@ function parseAzureStorageConnectionString(connectionString) {
   if (!connectionString) {
     return { accountName: 'test', accountKey: 'test' };
   }
-  
+
   const parts = connectionString.split(';');
   const accountName = parts.find(p => p.startsWith('AccountName='))?.split('=')[1];
   const accountKey = parts.find(p => p.startsWith('AccountKey='))?.split('=')[1];

@@ -31,7 +31,8 @@ const init = async () => {
 
 init().catch(console.error);
 async function uploadImage(buffer, filename, mimeType = 'image/jpeg') {
-const blobName = `${Date.now()}-${randomUUID()}-${filename}`;  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+  const blobName = `${Date.now()}-${randomUUID()}-${filename}`;
+  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
   try {
     await blockBlobClient.uploadData(buffer, {
