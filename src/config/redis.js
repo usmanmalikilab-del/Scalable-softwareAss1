@@ -7,18 +7,12 @@ let redisClient = null;
 if (env.redisHost && env.redisPassword) {
   redisClient = new Redis({
     host: env.redisHost,
-    port: env.redisPort,
+    port: Number(env.redisPort),
+    username: 'default',
     password: env.redisPassword,
     tls: {}, // 🔥 REQUIRED for Azure Redis (SSL)
-
-    maxRetriesPerRequest: 3,
-    retryDelayOnFailover: 100,
-    enableReadyCheck: true,
     lazyConnect: true,
-    connectTimeout: 10000,
-    commandTimeout: 5000,
-    retryDelayOnClusterDown: 300,
-    enableOfflineQueue: true // Allow queueing when offline
+    connectTimeout: 10000
   });
 
   // Enhanced event listeners for better monitoring
