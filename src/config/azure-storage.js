@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+const { randomUUID } = require('crypto');
 const { BlobServiceClient } = require('@azure/storage-blob');
 const env = require('./env');
 
@@ -8,30 +8,35 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(env.azureStorag
 // Get container client
 const containerClient = blobServiceClient.getContainerClient(env.azureStorage.containerName);
 
+async function initContainer() {
+  await containerClient.createIfNotExists({
+    access: 'blob'
+  });
+}
+
+const init = async () => {
+  await initContainer();
+};
+
+init().catch(console.error);
 async function uploadImage(buffer, filename, mimeType = 'image/jpeg') {
-  const blobName = `${Date.now()}-${filename}`;
-  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+const blobName = `${Date.now()}-${randomUUID()}-${filename}`;  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
   try {
-    const uploadResponse = await blockBlobClient.upload(buffer, buffer.length, {
+    await blockBlobClient.uploadData(buffer, {
       blobHTTPHeaders: { blobContentType: mimeType },
       metadata: {
         originalName: filename,
-        uploadTime: new Date().toISOString(),
-        originalMimeType: mimeType
+        uploadTime: new Date().toISOString()
       }
     });
 
     return {
       url: blockBlobClient.url,
-      blobName: blobName,
-      etag: uploadResponse.etag,
-      lastModified: uploadResponse.lastModified,
-      contentLength: uploadResponse.contentLength
+      blobName
     };
   } catch (error) {
-    console.error('Azure Blob upload error:', error);
-    throw new Error(`Failed to upload image to Azure Blob: ${error.message}`);
+    throw new Error(`Upload failed: ${error.message}`);
   }
 }
 
