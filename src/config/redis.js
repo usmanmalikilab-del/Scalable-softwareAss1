@@ -9,9 +9,8 @@ if (env.redisHost && env.redisPassword) {
     host: env.redisHost,
     port: env.redisPort,
     password: env.redisPassword,
-    tls: {}, // 🔥 REQUIRED for Azure Managed Redis (SSL)
+    tls: {}, // 🔥 REQUIRED for Azure Redis (SSL)
 
-    // Azure Redis specific optimizations
     maxRetriesPerRequest: 3,
     retryDelayOnFailover: 100,
     enableReadyCheck: true,
@@ -19,15 +18,7 @@ if (env.redisHost && env.redisPassword) {
     connectTimeout: 10000,
     commandTimeout: 5000,
     retryDelayOnClusterDown: 300,
-    enableOfflineQueue: true,
-
-    // Connection pooling for better performance
-    family: 4, // Force IPv4
-    keepAlive: 30000,
-
-    // Azure Redis recommended settings
-    commandTimeout: 5000,
-    maxMemoryPolicy: 'allkeys-lru'
+    enableOfflineQueue: true // Allow queueing when offline
   });
 
   // Enhanced event listeners for better monitoring
@@ -103,15 +94,14 @@ async function validateRedisConnection() {
 // Get Redis status
 function getRedisStatus() {
   if (!redisClient) {
-    return { connected: false, status: 'not_initialized', error: 'Azure Managed Redis client not initialized' };
+    return { connected: false, status: 'not_initialized', error: 'Redis client not initialized' };
   }
 
   return {
     connected: redisClient.status === 'ready',
     status: redisClient.status,
     host: env.redisHost,
-    port: env.redisPort,
-    type: 'Azure Managed Redis'
+    port: env.redisPort
   };
 }
 
