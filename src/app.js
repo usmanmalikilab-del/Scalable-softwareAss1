@@ -35,7 +35,12 @@ app.use(
     windowMs: 15 * 60 * 1000,
     max: 300,
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+      return req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 
+             (req.connection.socket ? req.connection.socket.remoteAddress : null) || 'unknown';
+    },
+    trustProxy: false
   })
 );
 

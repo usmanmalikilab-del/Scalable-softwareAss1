@@ -108,7 +108,7 @@ async function upload(req, res, next) {
       caption: req.body.caption,
       location: req.body.location,
       people: normalizePeople(req.body.people),
-      url: uploadResult.secure_url,
+      url: uploadResult.url,
       publicId: uploadResult.public_id,
       creatorId: req.user._id
     });
