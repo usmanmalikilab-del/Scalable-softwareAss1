@@ -8,16 +8,17 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(env.azureStorag
 // Get container client
 const containerClient = blobServiceClient.getContainerClient(env.azureStorage.containerName);
 
-async function uploadImage(buffer, filename) {
+async function uploadImage(buffer, filename, mimeType = 'image/jpeg') {
   const blobName = `${Date.now()}-${filename}`;
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
   try {
     const uploadResponse = await blockBlobClient.upload(buffer, buffer.length, {
-      blobHTTPHeaders: { blobContentType: 'image/jpeg' },
+      blobHTTPHeaders: { blobContentType: mimeType },
       metadata: {
         originalName: filename,
-        uploadTime: new Date().toISOString()
+        uploadTime: new Date().toISOString(),
+        originalMimeType: mimeType
       }
     });
 
