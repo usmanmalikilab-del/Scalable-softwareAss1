@@ -116,9 +116,11 @@ async function upload(req, res, next) {
     await clearByPattern('images:*');
     await clearByPattern('search:*');
 
+    const enrichedImage = enrichImage(image);
+
     return res.status(201).json({
       message: 'Image uploaded successfully',
-      image
+      image: enrichedImage
     });
   } catch (error) {
     return next(error);

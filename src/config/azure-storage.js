@@ -72,13 +72,14 @@ function generateImageUrl(publicId) {
       containerName: env.azureStorage.containerName,
       blobName: publicId,
       permissions: BlobSASPermissions.parse('r'),
-      startsOn: new Date(),
+      startsOn: new Date(Date.now() - 5 * 60 * 1000),
       expiresOn: new Date(Date.now() + 60 * 60 * 1000)
     },
     credential
   ).toString();
 
-  return `https://${env.azureStorage.accountName}.blob.core.windows.net/${env.azureStorage.containerName}/${encodeURIComponent(publicId)}?${sasToken}`;
+  const blockBlobClient = containerClient.getBlockBlobClient(publicId);
+  return `${blockBlobClient.url}?${sasToken}`;
 }
 
 module.exports = {

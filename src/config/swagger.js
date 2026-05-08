@@ -103,13 +103,13 @@ const options = {
             url: {
               type: 'string',
               format: 'uri',
-              description: 'CDN URL of the uploaded image',
-              example: 'https://res.cloudinary.com/demo/image/upload/v1234567890/photo.jpg'
+              description: 'SAS URL of the uploaded image in Azure Blob Storage',
+              example: 'https://myaccount.blob.core.windows.net/images/1234567890-photo.jpg?sv=2023-01-01&sr=b&sig=...'
             },
             publicId: {
               type: 'string',
-              description: 'Cloudinary public ID for image management',
-              example: 'photo-sharing/sunset_beach'
+              description: 'Azure Blob Storage blob name for image management',
+              example: '1234567890-photo.jpg'
             },
             creatorId: {
               type: 'string',

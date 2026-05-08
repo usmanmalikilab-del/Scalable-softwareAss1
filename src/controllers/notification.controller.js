@@ -1,4 +1,5 @@
 const Notification = require('../models/Notification');
+const { generateImageUrl } = require('../config/azure-storage');
 const buildPagination = require('../utils/pagination');
 
 // Get user notifications
@@ -21,19 +22,27 @@ async function getNotifications(req, res, next) {
     const [notifications, total] = await Promise.all([
       Notification.find(filter)
         .populate('senderId', 'username')
-        .populate('relatedImageId', 'title url')
+        .populate('relatedImageId', 'title url publicId')
         .sort({ createdAt: -1 })
         .skip(pagination.skip)
         .limit(pagination.limit),
       Notification.countDocuments(filter)
     ]);
 
+    const enrichedNotifications = notifications.map((n) => {
+      const notification = n.toObject ? n.toObject() : n;
+      if (notification.relatedImageId && notification.relatedImageId.publicId) {
+        notification.relatedImageId.url = generateImageUrl(notification.relatedImageId.publicId);
+      }
+      return notification;
+    });
+
     const payload = {
       page: pagination.page,
       limit: pagination.limit,
       total,
       totalPages: Math.ceil(total / pagination.limit),
-      data: notifications
+      data: enrichedNotifications
     };
 
     return res.status(200).json(payload);
