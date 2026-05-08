@@ -3,7 +3,7 @@ const Image = require('../models/Image');
 const Comment = require('../models/Comment');
 const Rating = require('../models/Rating');
 const Notification = require('../models/Notification');
-const { uploadImage } = require('../services/image.service');
+const { uploadImage, enrichImage } = require('../services/image.service');
 const { getCachedValue, setCachedValue, clearByPattern } = require('../services/cache.service');
 const buildPagination = require('../utils/pagination');
 
@@ -202,7 +202,7 @@ async function listImages(req, res, next) {
       limit: pagination.limit,
       total,
       totalPages: Math.ceil(total / pagination.limit),
-      data: images
+      data: images.map(enrichImage)
     };
 
     await setCachedValue(cacheKey, payload, 90);
@@ -280,8 +280,9 @@ async function getImageById(req, res, next) {
       Rating.find({ imageId: id }).populate('userId', 'username')
     ]);
 
+    const imageObj = enrichImage(image);
     return res.status(200).json({
-      ...image.toObject(),
+      ...imageObj,
       comments,
       ratings
     });
@@ -598,7 +599,7 @@ async function searchImages(req, res, next) {
     const payload = {
       query: searchQuery,
       count: images.length,
-      data: images
+      data: images.map(enrichImage)
     };
 
     await setCachedValue(cacheKey, payload, 120);

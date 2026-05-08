@@ -1,5 +1,9 @@
-const { randomUUID } = require('crypto');
-const { BlobServiceClient } = require('@azure/storage-blob');
+const {
+  BlobServiceClient,
+  generateBlobSASQueryParameters,
+  BlobSASPermissions,
+  StorageSharedKeyCredential
+} = require('@azure/storage-blob');
 const env = require('./env');
 
 // Create BlobServiceClient using connection string directly
@@ -8,47 +12,30 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(env.azureStorag
 // Get container client
 const containerClient = blobServiceClient.getContainerClient(env.azureStorage.containerName);
 
-async function initContainer() {
-  try {
-    await containerClient.createIfNotExists({ access: 'private' });
-    console.log('✅ Azure container initialized successfully');
-  } catch (error) {
-    if (error.code === 'PublicAccessNotPermitted') {
-      console.log('⚠️ Container already exists with private access');
-    } else {
-      console.error('❌ Failed to initialize Azure container:', error.message);
-      throw error;
-    }
-  }
-}
-
-const init = async () => {
-  // Only initialize in non-test environments
-  if (process.env.NODE_ENV !== 'test') {
-    await initContainer();
-  }
-};
-
-init().catch(console.error);
 async function uploadImage(buffer, filename, mimeType = 'image/jpeg') {
-  const blobName = `${Date.now()}-${randomUUID()}-${filename}`;
+  const blobName = `${Date.now()}-${filename}`;
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
   try {
-    await blockBlobClient.uploadData(buffer, {
+    const uploadResponse = await blockBlobClient.upload(buffer, buffer.length, {
       blobHTTPHeaders: { blobContentType: mimeType },
       metadata: {
         originalName: filename,
-        uploadTime: new Date().toISOString()
+        uploadTime: new Date().toISOString(),
+        originalMimeType: mimeType
       }
     });
 
     return {
       url: blockBlobClient.url,
-      blobName
+      blobName: blobName,
+      etag: uploadResponse.etag,
+      lastModified: uploadResponse.lastModified,
+      contentLength: uploadResponse.contentLength
     };
   } catch (error) {
-    throw new Error(`Upload failed: ${error.message}`);
+    console.error('Azure Blob upload error:', error);
+    throw new Error(`Failed to upload image to Azure Blob: ${error.message}`);
   }
 }
 
@@ -74,10 +61,31 @@ async function getImageProperties(blobName) {
   }
 }
 
+function generateImageUrl(publicId) {
+  const credential = new StorageSharedKeyCredential(
+    env.azureStorage.accountName,
+    env.azureStorage.accountKey
+  );
+
+  const sasToken = generateBlobSASQueryParameters(
+    {
+      containerName: env.azureStorage.containerName,
+      blobName: publicId,
+      permissions: BlobSASPermissions.parse('r'),
+      startsOn: new Date(),
+      expiresOn: new Date(Date.now() + 60 * 60 * 1000)
+    },
+    credential
+  ).toString();
+
+  return `https://${env.azureStorage.accountName}.blob.core.windows.net/${env.azureStorage.containerName}/${encodeURIComponent(publicId)}?${sasToken}`;
+}
+
 module.exports = {
   blobServiceClient,
   containerClient,
   uploadImage,
   deleteImage,
-  getImageProperties
+  getImageProperties,
+  generateImageUrl
 };
