@@ -1,5 +1,5 @@
 const sharp = require('sharp');
-const { uploadImage: uploadToAzure, deleteImage: deleteFromAzure, generateSasUrl } = require('../config/azure-storage');
+const { uploadImage: uploadToAzure, deleteImage: deleteFromAzure, generateImageUrl } = require('../config/azure-storage');
 
 // Helper function to detect MIME type from buffer
 function getMimeType(buffer) {
@@ -77,7 +77,7 @@ async function deleteImage(blobName) {
 function enrichImage(imageDoc) {
   const image = imageDoc && imageDoc.toObject ? imageDoc.toObject() : imageDoc;
   if (image && image.publicId) {
-    image.url = generateSasUrl(image.publicId);
+    image.url = generateImageUrl(image.publicId);
   }
   return image;
 }
